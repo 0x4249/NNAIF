@@ -228,7 +228,7 @@ class EMNA(optim.Optimizer):
             
         # Sort samples by objective function closure values
         F_sorted, ind_sorted = torch.sort(F)
-        obj_min = F_sorted[0]
+        obj_min = F_sorted[0].item()
         
         # Update sampling distribution mean
         mu = torch.mean(X[ind_sorted[0:num_kept_samples],:], axis=0)
