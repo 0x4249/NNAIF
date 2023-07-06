@@ -25,7 +25,7 @@ def surrogate_filtered_sampling(surrogate_model,
         surrogate_model (torch.nn.Module): PyTorch surrogate model for filtering sampled points.
         out_transform (callable): transforms surrogate model output to a scalar.
         x_0 (torch.Tensor): center point to sample around.
-        f_0 (): true function value at center point x_0.
+        f_0 (torch.Tensor): true function value at center point x_0.
         h (float): scale samples by factor of h.
         sampler (callable): argumentless function that generates d-dimensional vectors.
         num_points (int): number of points desired to pass surrogate filter test.
