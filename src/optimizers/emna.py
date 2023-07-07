@@ -175,7 +175,7 @@ class EMNA(optim.Optimizer):
              num_new_samples=100,
              num_kept_samples=10):
         """
-        Performs a single EMNA optimization step.
+        Performs a single Estimation of Multivariate Normal Algorithm (EMNA) optimization step.
         
         Args:
             obj_closure (callable): A closure that evaluates the objective function.

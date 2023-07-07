@@ -372,7 +372,7 @@ class IMFIL(optim.Optimizer):
              num_dirs_custom=0,
              beta_grad=1e-5):    
         """
-        Performs a single IF optimization step.
+        Performs a single Implicit Filtering (IF) optimization step.
         
         Args:
             obj_closure (callable): A closure that evaluates the objective function.

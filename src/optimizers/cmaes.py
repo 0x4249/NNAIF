@@ -173,7 +173,7 @@ class CMAES(optim.Optimizer):
     def step(self,
              obj_closure):
         """
-        Performs a single CMA-ES optimization step.
+        Performs a single Covariance Matrix Adaptation Evolution Strategy (CMA-ES) optimization step.
         
         Args:
             obj_closure (callable): A closure that evaluates the objective function.
