@@ -40,10 +40,10 @@ class EMNA(optim.Optimizer):
         if not gamma >= 0.0:
             raise ValueError("Invalid covariance matrix regularization parameter gamma (must be >= 0): {}".format(gamma))
         
-        defaults = dict(sigma_0=sigma_0,
-                        gamma=gamma,
-                        dtype=dtype,
-                        verbose=verbose)
+        defaults = {"sigma_0":sigma_0,
+                    "gamma":gamma,
+                    "dtype":dtype,
+                    "verbose":verbose}
         super().__init__(params, defaults)
 
         if len(self.param_groups) != 1:
@@ -52,15 +52,23 @@ class EMNA(optim.Optimizer):
         self._params = self.param_groups[0]['params']
         self._device = self._params[0].device
         self._numel_cache = None
+        d = self._calc_numel()
         
         # NOTE: EMNA has only global state, but we register it as state for
         # the first param, because this helps with casting in load_state_dict
-        d = self._calc_numel()
         state = self.state[self._params[0]]
-        state.setdefault('n_iter', 0) # iteration count
-        state.setdefault('prev_obj_min', None) # previous objective function minimum value
-        state.setdefault('obj_closure_eval_count', 0) # count of objective function closure evaluations at current iteration
-        state.setdefault('Sigma', ((sigma_0**2) + gamma)*torch.eye(d, device=self._device)) # sampling distribution covariance
+        
+        # iteration count
+        state.setdefault('iteration count', 0)
+        
+        # previous objective function value
+        state.setdefault('previous objective value', None)
+        
+        # count of objective function closure evaluations at current iteration
+        state.setdefault('objective closure evaluation count', 0)
+        
+        # sampling distribution covariance
+        state.setdefault('Sigma', ((sigma_0**2) + gamma)*torch.eye(d, device=self._device))
 
         
     def _calc_numel(self):
@@ -72,7 +80,7 @@ class EMNA(optim.Optimizer):
         """
         if self._numel_cache is None:
             self._numel_cache = reduce(lambda total, p: total + p.numel(), self._params, 0)
-        return self._numel_cache      
+        return self._numel_cache
 
 
     def _gather_flat_params(self):
@@ -159,7 +167,7 @@ class EMNA(optim.Optimizer):
         with torch.no_grad():
             # evaluate objective function only
             obj = obj_closure() 
-            state['obj_closure_eval_count'] += 1
+            state['objective closure evaluation count'] += 1
             
             # restore parameters to initial values
             self._set_param(x) 
@@ -208,10 +216,10 @@ class EMNA(optim.Optimizer):
         verbose = group['verbose']  
         
         # Set objective function closure evaluation counter to zero
-        state['obj_closure_eval_count'] = 0
+        state['objective closure evaluation count'] = 0
         
         # Start EMNA iteration
-        state['n_iter'] += 1        
+        state['iteration count'] += 1        
         mu = self._gather_flat_params()
         Sigma = state.get('Sigma')
         
@@ -247,9 +255,9 @@ class EMNA(optim.Optimizer):
         # Set parameters to mean of sampling distribution
         self._update_params_to_point(mu)
 
-        # Update state        
+        # Update state
         state['Sigma'] = Sigma
-        state['prev_obj_min'] = obj_min
+        state['previous objective value'] = obj_min
         
         return obj_min
         
