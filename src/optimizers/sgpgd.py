@@ -41,20 +41,20 @@ class SGPGD(optim.Optimizer):
         
         # Check that line search is valid
         if line_search not in ["Armijo", "None"]:
-            raise ValueError("Invalid line search: {}".format(line_search))    
+            raise ValueError("Invalid line search: {}".format(line_search))
             
         # Check that Hessian approximation mode is valid
         if hessian_approx not in ["I", "BFGS"]:
             raise ValueError("Invalid Hessian approximation mode: {}".format(hessian_approx))
             
-        defaults = dict(line_search=line_search,
-                        hessian_approx=hessian_approx,
-                        dtype=dtype,
-                        verbose=verbose)
+        defaults = {"line search":line_search,
+                    "hessian approximation":hessian_approx,
+                    "dtype":dtype,
+                    "verbose":verbose}
         super().__init__(params, defaults) 
         
         if len(self.param_groups) != 1:
-            raise ValueError("SG-PGD doesn't support per-parameter options (parameter groups)")    
+            raise ValueError("SG-PGD doesn't support per-parameter options (parameter groups)")
         
         self._params = self.param_groups[0]['params']
         self._device = self._params[0].device
@@ -63,12 +63,24 @@ class SGPGD(optim.Optimizer):
         # NOTE: SG-PGD has only global state, but we register it as state for
         # the first param, because this helps with casting in load_state_dict
         state = self.state[self._params[0]]
-        state.setdefault('n_iter', 0) # iteration count
-        state.setdefault('prev_flat_stencil_grad', None) # previous flat stencil gradient
-        state.setdefault('prev_obj', None) # previous best objective function value
-        state.setdefault('obj_closure_eval_count', 0) # count of objective function closure evaluations at current iteration
-        state.setdefault('line_search_obj_closure_eval_count', 0) # current iteration count of objective function evaluations for line search
-        state.setdefault('H', H_0.to(device=self._device)) # Hessian approximation
+        
+        # iteration count
+        state.setdefault('iteration count', 0)
+        
+        # previous flat stencil gradient
+        state.setdefault('previous flat stencil gradient', None)
+        
+        # previous best objective function value
+        state.setdefault('previous best objective value', None)
+        
+        # count of objective function closure evaluations at current iteration
+        state.setdefault('objective closure evaluation count', 0)
+        
+        # current iteration count of objective function evaluations for line search
+        state.setdefault('line search objective closure evaluation count', 0)
+        
+        # Hessian approximation
+        state.setdefault('H', H_0.to(device=self._device))
         
 
     def _calc_numel(self):
@@ -172,7 +184,7 @@ class SGPGD(optim.Optimizer):
         with torch.no_grad():
             # evaluate objective function only
             obj = obj_closure()
-            state['obj_closure_eval_count'] += 1
+            state['objective closure evaluation count'] += 1
             
             # restore parameters to initial values
             self._set_param(x) 
@@ -188,9 +200,10 @@ class SGPGD(optim.Optimizer):
         Get stencil directions.
         
         Args:
-            stencil_type (string): stencil type - either "CD" for central finite difference stencil (size 2d), "a-PBS" 
-                                   for an asymmetric positive basis stencil (size d+1), "FD" for forward finite 
-                                   difference stencil (size d), or "None". 
+            stencil_type (string): stencil type - "central difference" for central finite difference stencil (size 2d), 
+                                   "asymmetric positive basis" for asymmetric positive basis stencil (size d+1),
+                                   "forward difference" for forward finite difference stencil (size d), 
+                                   or "None" to return an empty tensor. 
         
         Returns:
             V_stencil (torch.Tensor): matrix of stencil directions.
@@ -198,16 +211,16 @@ class SGPGD(optim.Optimizer):
         d = self._calc_numel()
         
         # Get stencil directions
-        if stencil_type in ["CD"]:
+        if stencil_type in ["central difference", "Central Difference"]:
             V_pos = torch.eye(d, device=self._device)
             V_neg = -V_pos
             V_stencil = torch.cat((V_pos, V_neg), dim=1)
             
-        elif stencil_type in ["a-PBS"]:
+        elif stencil_type in ["asymmetric positive basis", "Asymmetric Positive Basis"]:
             V_pos = torch.eye(d, device=self._device)
             V_stencil = torch.cat((V_pos, (-1/(d**(1/2)))*torch.ones(d, device=self._device).unsqueeze(1)), dim=1)
             
-        elif stencil_type in ["FD"]:
+        elif stencil_type in ["forward difference", "Forward Difference"]:
             V_pos = torch.eye(d, device=self._device)
             V_stencil = V_pos
             
@@ -332,7 +345,7 @@ class SGPGD(optim.Optimizer):
             line_search (string): string specifying fixed step size ("None") or Armijo line search ("Armijo").
         """
         group = self.param_groups[0]
-        group['line_search'] = line_search
+        group['line search'] = line_search
 
 
     @torch.no_grad()
@@ -353,9 +366,10 @@ class SGPGD(optim.Optimizer):
         
         Args:
             obj_closure (callable): A closure that evaluates the objective function.
-            stencil_type (string): Stencil type - either "CD" for central finite difference stencil (size 2d), "a-PBS" 
-                                   for an asymmetric positive basis stencil (size d+1), "FD" for forward finite 
-                                   difference stencil (size d), or "None" (use "None" to rely on only custom_sampler). 
+            stencil_type (string): stencil type - "central difference" for central finite difference stencil (size 2d), 
+                                   "asymmetric positive basis" for asymmetric positive basis stencil (size d+1),
+                                   "forward difference" for forward finite difference stencil (size d), 
+                                   or "None" to rely on only custom_sampler.
             h (float): stencil size. 
             step_size_ls (float): initial line search step size (default: 1e0).
             max_line_search_obj_closure_evals (int): maximum number of objective function closure evaluations for line search (default: 3).
@@ -370,7 +384,10 @@ class SGPGD(optim.Optimizer):
             obj (float): objective function value of best solution. 
         """
         # Check that stencil type is valid
-        if stencil_type not in ["CD", "a-PBS", "FD", "None"]:
+        if stencil_type not in ["central difference", "Central Difference",
+                                "asymmetric positive basis", "Asymmetric Positive Basis",
+                                "forward difference", "Forward Difference",
+                                "None"]:
             raise ValueError("Invalid stencil type: {}".format(stencil_type))
         
         # Check that number of custom_sampler directions is valid
@@ -382,7 +399,7 @@ class SGPGD(optim.Optimizer):
             raise ValueError("Invalid initial line search step size: {}".format(step_size_ls)) 
             
         state = self.state[self._params[0]]
-        state['step_size'] = step_size_ls
+        state['step size'] = step_size_ls
         
         # Define deterministic objective function closure
         seed = time.time()
@@ -392,29 +409,29 @@ class SGPGD(optim.Optimizer):
         
         # Load optimization settings
         group = self.param_groups[0]
-        line_search = group['line_search']
-        hessian_approx = group['hessian_approx']
+        line_search = group['line search']
+        hessian_approx = group['hessian approximation']
         dtype = group['dtype']
         verbose = group['verbose']
         
         # Set objective function closure evaluation counters to zero
-        state['obj_closure_eval_count'] = 0
-        state['line_search_obj_closure_eval_count'] = 0
+        state['objective closure evaluation count'] = 0
+        state['line search objective closure evaluation count'] = 0
         
-        # Start SD-GD iteration
-        state['n_iter'] += 1
+        # Start SG-PGD iteration
+        state['iteration count'] += 1
         
         # Store current point
         prev_flat_params = self._gather_flat_params()
         
         # Evaluate f(x) and stencil gradient if first iteration
-        if state['n_iter'] == 1:
+        if state['iteration count'] == 1:
             with torch.no_grad():
                 obj = float(obj_closure_deterministic())
-                state['obj_closure_eval_count'] += 1
+                state['objective closure evaluation count'] += 1
             
             # Store initial objective function closure value
-            state['prev_obj'] = obj
+            state['previous best objective value'] = obj
             
             # Prepare to get directions
             V = torch.tensor([], device=self._device)
@@ -446,11 +463,11 @@ class SGPGD(optim.Optimizer):
                                                            beta_grad=beta_grad)
             
             # Store initial stencil gradient
-            state['prev_flat_stencil_grad'] = flat_stencil_grad
+            state['previous flat stencil gradient'] = flat_stencil_grad
             
         
-        prev_best_obj = state.get('prev_obj')
-        prev_flat_stencil_grad = state.get('prev_flat_stencil_grad')
+        prev_best_obj = state.get('previous best objective value')
+        prev_flat_stencil_grad = state.get('previous flat stencil gradient')
         
         if hessian_approx in ["I"]:
             flat_update_direction = - prev_flat_stencil_grad.clone(memory_format=torch.contiguous_format)
@@ -460,11 +477,11 @@ class SGPGD(optim.Optimizer):
             flat_update_direction = - H@(prev_flat_stencil_grad.clone(memory_format=torch.contiguous_format))
             
         # Line search
-        step_size = state.get('step_size')
+        step_size = state.get('step size')
         f_try_ls = self._obj_directional_evaluate(obj_closure_deterministic,
                                                   step_size,
                                                   flat_update_direction)
-        state['line_search_obj_closure_eval_count'] += 1
+        state['line search objective closure evaluation count'] += 1
         
         # Line search
         if line_search in ["Armijo"]:
@@ -481,18 +498,18 @@ class SGPGD(optim.Optimizer):
             
             while found is False or not opt_utils.is_legal(torch.tensor(f_try_ls, dtype=dtype)):
                 if verbose:
-                    print("Obj. closure evaluation count: {}".format(state['obj_closure_eval_count']))
+                    print("Obj. closure evaluation count: {}".format(state['objective closure evaluation count']))
                     print("Step size: {}".format(step_size))
                     print("New f: {}".format(f_try_ls))
                     print("Old f: {}".format(prev_best_obj))
                     print("Update direction norm: {}".format(torch.linalg.norm(flat_update_direction)))
                     
-                if state['line_search_obj_closure_eval_count'] < max_line_search_obj_closure_evals:
+                if state['line search objective closure evaluation count'] < max_line_search_obj_closure_evals:
                     # Try a new point
                     f_try_ls = self._obj_directional_evaluate(obj_closure_deterministic,
                                                               step_size,
                                                               flat_update_direction)
-                    state['line_search_obj_closure_eval_count'] += 1
+                    state['line search objective closure evaluation count'] += 1
                     found, step_size = opt_utils.check_armijo_condition(step_size=step_size, 
                                                                         loss=prev_best_obj,
                                                                         loss_try=f_try_ls,
@@ -558,9 +575,9 @@ class SGPGD(optim.Optimizer):
         
         
         # Update state 
-        state['prev_flat_stencil_grad'] = flat_stencil_grad
-        state['step_size'] = step_size
-        state['prev_obj'] = prev_best_obj
+        state['previous flat stencil gradient'] = flat_stencil_grad
+        state['step size'] = step_size
+        state['previous best objective value'] = prev_best_obj
         obj = prev_best_obj
         
         return obj       
