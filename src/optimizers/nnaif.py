@@ -367,6 +367,9 @@ class NNAIF(optim.Optimizer):
         """
         d = self._calc_numel()
         
+        group = self.param_groups[0]
+        verbose = group['verbose']
+        
         y_dot_s = y.dot(s)
         
         # Check BFGS curvature condition
@@ -381,6 +384,9 @@ class NNAIF(optim.Optimizer):
         else:
             H_new = H
             
+            if verbose:
+                print("Curvature condition failed. Skipping BFGS update.")
+                
         return H_new
     
     
