@@ -130,7 +130,7 @@ def surrogate_descent_opt_step(surrogate_descent_opt_dict,
         out_transform (callable): transforms surrogate model output to a scalar.
         
     Returns:
-        scaled_surrogate_obj (): new value of scaled surrogate model objective function.
+        scaled_surrogate_obj (torch.Tensor): new value of scaled surrogate model objective function.
     """
     alpha = surrogate_descent_opt_dict["alpha"]
     surrogate_opt_name = surrogate_descent_opt_dict["name"]
