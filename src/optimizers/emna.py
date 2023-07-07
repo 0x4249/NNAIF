@@ -68,7 +68,7 @@ class EMNA(optim.Optimizer):
         Calculate the number of elements to be optimized and cache result. 
         
         Returns:
-            _numel_cache (): total number of elements to be optimized.
+            _numel_cache (int): total number of elements to be optimized.
         """
         if self._numel_cache is None:
             self._numel_cache = reduce(lambda total, p: total + p.numel(), self._params, 0)
