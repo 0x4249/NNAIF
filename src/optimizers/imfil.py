@@ -481,8 +481,9 @@ class IMFIL(optim.Optimizer):
         prev_flat_stencil_grad = state.get('prev_flat_stencil_grad')
         
         # Find minimum of all objective function closure values
-        f_best, ind_best = torch.min(F, 
-                                     dim=0)  
+        f_best_tensor, ind_best = torch.min(F,
+                                            dim=0)
+        f_best = f_best_tensor.item()
         
         # Check for stencil failure
         if f_best >= prev_best_obj:
