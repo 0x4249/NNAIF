@@ -3,7 +3,7 @@ from . import cmaes
 from . import emna
 from . import imfil
 from . import nnaif
-from . import sd_gd
+from . import sgpgd
 from . import surrogate_models
 
 # Third party imports
@@ -17,7 +17,7 @@ def get_optimizer(opt_dict,
     
     Args:
         opt_dict (dict): dictionary containing optimizer name and settings. 
-        model (torch.nn.Module): PyTorch model to optimize.     
+        model (torch.nn.Module): PyTorch model to optimize. 
         
     Returns:
         opt (torch.optim.Optimizer): PyTorch optimizer for parameters of PyTorch model to optimize. 
@@ -27,8 +27,8 @@ def get_optimizer(opt_dict,
     
     # Custom optimizers
     # ===============
-    if opt_name in ["CMA_ES"]:
-        population_size = opt_dict.get("population_size", 20)
+    if opt_name in ["CMA-ES"]:
+        population_size = opt_dict.get("population size", 20)
         
         if population_size in ["d"]:
             population_size = sum(p.numel() for p in model.parameters())
@@ -79,14 +79,14 @@ def get_optimizer(opt_dict,
     
     elif opt_name in ["NNAIF"]:
         numel = sum(p.numel() for p in model.parameters())
-        surrogate_model_dict = opt_dict["surrogate_model_dict"]
+        surrogate_model_dict = opt_dict["surrogate model dict"]
         surrogate_model_type = surrogate_model_dict["type"]
         
         if surrogate_model_type in ["RESNET EULER"]:
             
             d_layer = surrogate_model_dict["d_layer"]      
             d_out = surrogate_model_dict["d_out"]
-            num_square_layers = surrogate_model_dict["num_square_layers"]
+            num_square_layers = surrogate_model_dict["number of square layers"]
             dt = surrogate_model_dict["dt"]
             sigma = surrogate_model_dict["sigma"]
             
@@ -104,7 +104,7 @@ def get_optimizer(opt_dict,
         
         H_0 = torch.tensor([])
         
-        surrogate_fit_opt_dict = opt_dict["surrogate_fit_opt_dict"]
+        surrogate_fit_opt_dict = opt_dict["surrogate fit opt dict"]
         h_0 = opt_dict.get("h_0", 1.0)
         hessian_approx = opt_dict.get("hessian approx", "BFGS")
         
@@ -125,7 +125,7 @@ def get_optimizer(opt_dict,
                           verbose=verbose)
 
 
-    elif opt_name in ["SD_GD"]:
+    elif opt_name in ["SG-PGD"]:
         line_search = opt_dict.get("line search", "Armijo")
         
         H_0 = torch.tensor([])
@@ -140,7 +140,7 @@ def get_optimizer(opt_dict,
                 H_0 = torch.eye(d)
         
         verbose = opt_dict.get("verbose", False)
-        opt = sd_gd.SDGD(params=model.parameters(),
+        opt = sgpgd.SGPGD(params=model.parameters(),
                          line_search=line_search,
                          hessian_approx=hessian_approx,
                          H_0=H_0,
