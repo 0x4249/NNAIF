@@ -38,11 +38,11 @@ class CMAES(optim.Optimizer):
                  dtype=torch.float,
                  verbose=False):
 
-        defaults = dict(population_size=population_size,
-                        sigma_0=sigma_0,
-                        active=active,
-                        dtype=dtype,
-                        verbose=verbose)
+        defaults = {"population size":population_size,
+                    "sigma_0":sigma_0,
+                    "active":active,
+                    "dtype":dtype,
+                    "verbose":verbose}
         super().__init__(params, defaults)
 
         if len(self.param_groups) != 1:
@@ -58,9 +58,15 @@ class CMAES(optim.Optimizer):
         # NOTE: CMA-ES has only global state, but we register it as state for
         # the first param, because this helps with casting in load_state_dict   
         state = self.state[self._params[0]]
-        state.setdefault('n_iter', 0) # iteration count     
-        state.setdefault('prev_obj', None) # previous objective function value
-        state.setdefault('obj_closure_eval_count', 0) # count of objective function closure evaluations at current iteration
+        
+        # iteration count
+        state.setdefault('iteration count', 0)
+        
+        # previous objective function value
+        state.setdefault('previous objective value', None)
+        
+        # count of objective function closure evaluations at current iteration
+        state.setdefault('objective closure evaluation count', 0)
         
         
     def _calc_numel(self):
@@ -132,7 +138,7 @@ class CMAES(optim.Optimizer):
             params_data (list): list of torch.Tensor objects containing values to set parameters to.
         """
         for p, pdata in zip(self._params, params_data):
-            p.copy_(pdata)        
+            p.copy_(pdata)
                         
             
     def _obj_point_evaluate(self, 
@@ -159,7 +165,7 @@ class CMAES(optim.Optimizer):
         with torch.no_grad():
             # evaluate objective function only
             obj = obj_closure() 
-            state['obj_closure_eval_count'] += 1
+            state['objective closure evaluation count'] += 1
             
             # restore parameters to initial values
             self._set_param(x) 
@@ -192,17 +198,17 @@ class CMAES(optim.Optimizer):
 
         # Load optimization settings
         group = self.param_groups[0]
-        population_size = group['population_size']
+        population_size = group['population size']
         sigma_0 = group['sigma_0']
         active = group['active']
         dtype = group['dtype']
         verbose = group['verbose']             
         
         # Set objective function closure evaluation counter to zero
-        state['obj_closure_eval_count'] = 0
+        state['objective closure evaluation count'] = 0
         
         # Start CMA-ES iteration
-        state['n_iter'] += 1
+        state['iteration count'] += 1
 
         # Draw new samples from current sampling distribution
         next_points = self._cma_es.ask()
@@ -223,7 +229,7 @@ class CMAES(optim.Optimizer):
         self._update_params_to_point(torch.from_numpy(self._cma_es.result[5]))
 
         # Update state        
-        state['prev_obj'] = obj
+        state['previous objective value'] = obj
         
         return obj
                           
