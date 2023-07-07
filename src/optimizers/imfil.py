@@ -46,14 +46,14 @@ class IMFIL(optim.Optimizer):
         if hessian_approx not in ["I", "BFGS"]:
             raise ValueError("Invalid Hessian approximation mode: {}".format(hessian_approx))
             
-        defaults = dict(h_0=h_0,
-                        hessian_approx=hessian_approx,
-                        dtype=dtype,
-                        verbose=verbose)
+        defaults = {"h_0":h_0,
+                    "hessian approximation":hessian_approx,
+                    "dtype":dtype,
+                    "verbose":verbose}
         super().__init__(params, defaults)
         
         if len(self.param_groups) != 1:
-            raise ValueError("Implicit filtering doesn't support per-parameter options (parameter groups)")       
+            raise ValueError("Implicit filtering doesn't support per-parameter options (parameter groups)")
             
         self._params = self.param_groups[0]['params']
         self._device = self._params[0].device
@@ -62,16 +62,36 @@ class IMFIL(optim.Optimizer):
         # NOTE: IF has only global state, but we register it as state for
         # the first param, because this helps with casting in load_state_dict   
         state = self.state[self._params[0]]
-        state.setdefault('n_iter', 0) # iteration count
-        state.setdefault('prev_flat_stencil_grad', None) # previous flat stencil gradient
-        state.setdefault('prev_obj', None) # previous best objective function value
-        state.setdefault('prev_V', None) # previous directions 
-        state.setdefault('prev_F', None) # previous objective function closure evaluations
-        state.setdefault('obj_closure_eval_count', 0) # count of objective function closure evaluations at current iteration
-        state.setdefault('line_search_obj_closure_eval_count', 0) # current iteration count of objective function evaluations for line search
-        state.setdefault('h', h_0) # stencil size
-        state.setdefault('stencil_failure', False) # flag for stencil failure
-        state.setdefault('H', H_0.to(device=self._device)) # Hessian approximation 
+        
+        # iteration count
+        state.setdefault('iteration count', 0)
+        
+        # previous flat stencil gradient
+        state.setdefault('previous flat implicit filtering stencil gradient', None) 
+        
+        # previous best objective function value
+        state.setdefault('previous best objective value', None)
+        
+        # previous stencil directions 
+        state.setdefault('previous V', None)
+        
+        # previous objective function closure evaluations
+        state.setdefault('previous F', None)
+        
+        # count of objective function closure evaluations at current iteration
+        state.setdefault('objective closure evaluation count', 0)
+        
+        # current iteration count of objective function evaluations for line search
+        state.setdefault('line search objective closure evaluation count', 0)
+        
+        # stencil size
+        state.setdefault('h', h_0)
+        
+        # flag for stencil failure
+        state.setdefault('stencil failure?', False)
+        
+        # Hessian approximation
+        state.setdefault('H', H_0.to(device=self._device))
         
     
     def _calc_numel(self):
@@ -145,7 +165,7 @@ class IMFIL(optim.Optimizer):
             params_data (list): list of torch.Tensor objects containing values to set parameters to.
         """
         for p, pdata in zip(self._params, params_data):
-            p.copy_(pdata)                                                                               
+            p.copy_(pdata)
                         
                         
     def _obj_directional_evaluate(self,
@@ -175,7 +195,7 @@ class IMFIL(optim.Optimizer):
         with torch.no_grad():
             # evaluate objective function only
             obj = obj_closure()
-            state['obj_closure_eval_count'] += 1
+            state['objective closure evaluation count'] += 1
             
             # restore parameters to initial values
             self._set_param(x) 
@@ -191,9 +211,10 @@ class IMFIL(optim.Optimizer):
         Get stencil directions.
         
         Args:
-            stencil_type (string): stencil type - either "CD" for central finite difference stencil (size 2d), "a-PBS" 
-                                   for an asymmetric positive basis stencil (size d+1), "FD" for forward finite 
-                                   difference stencil (size d), or "None". 
+            stencil_type (string): stencil type - "central difference" for central finite difference stencil (size 2d), 
+                                   "asymmetric positive basis" for asymmetric positive basis stencil (size d+1),
+                                   "forward difference" for forward finite difference stencil (size d), 
+                                   or "None" to return an empty tensor. 
         
         Returns:
             V_stencil (torch.Tensor): matrix of stencil directions.
@@ -201,16 +222,16 @@ class IMFIL(optim.Optimizer):
         d = self._calc_numel()
         
         # Get stencil directions
-        if stencil_type in ["CD"]:
+        if stencil_type in ["central difference", "Central Difference"]:
             V_pos = torch.eye(d, device=self._device)
             V_neg = -V_pos
             V_stencil = torch.cat((V_pos, V_neg), dim=1)
             
-        elif stencil_type in ["a-PBS"]:
+        elif stencil_type in ["asymmetric positive basis", "Asymmetric Positive Basis"]:
             V_pos = torch.eye(d, device=self._device)
             V_stencil = torch.cat((V_pos, (-1/(d**(1/2)))*torch.ones(d, device=self._device).unsqueeze(1)), dim=1)
             
-        elif stencil_type in ["FD"]:
+        elif stencil_type in ["forward difference", "Forward Difference"]:
             V_pos = torch.eye(d, device=self._device)
             V_stencil = V_pos
             
@@ -376,9 +397,10 @@ class IMFIL(optim.Optimizer):
         
         Args:
             obj_closure (callable): A closure that evaluates the objective function.
-            stencil_type (string): Stencil type - either "CD" for central finite difference stencil (size 2d), "a-PBS" 
-                                   for an asymmetric positive basis stencil (size d+1), "FD" for forward finite 
-                                   difference stencil (size d), or "None" (use "None" to rely on only custom_sampler). 
+            stencil_type (string): stencil type - "central difference" for central finite difference stencil (size 2d), 
+                                   "asymmetric positive basis" for asymmetric positive basis stencil (size d+1),
+                                   "forward difference" for forward finite difference stencil (size d), 
+                                   or "None" to rely on only custom_sampler.
             tau_tr (float): factor in (0,1) by which to shrink h upon failure (default: 0.5).
             tau_grad (float): factor by which to compare stencil gradient norm relative to h (default: 1e-2).
             step_size_ls (float): initial line search step size (default: 1e0).
@@ -393,7 +415,10 @@ class IMFIL(optim.Optimizer):
             obj (float): objective function value of best solution. 
         """
         # Check that stencil type is valid
-        if stencil_type not in ["CD", "a-PBS", "FD", "None"]:
+        if stencil_type not in ["central difference", "Central Difference",
+                                "asymmetric positive basis", "Asymmetric Positive Basis",
+                                "forward difference", "Forward Difference",
+                                "None"]:
             raise ValueError("Invalid stencil type: {}".format(stencil_type))
         
         # Check that tau_tr is valid
@@ -420,29 +445,29 @@ class IMFIL(optim.Optimizer):
         # Load optimization settings
         group = self.param_groups[0]
         h_0 = group['h_0']
-        hessian_approx = group['hessian_approx']
+        hessian_approx = group['hessian approximation']
         dtype = group['dtype']        
         verbose = group['verbose']
         
         # Set objective function closure evaluation counters to zero
-        state['obj_closure_eval_count'] = 0
-        state['line_search_obj_closure_eval_count'] = 0
+        state['objective closure evaluation count'] = 0
+        state['line search objective closure evaluation count'] = 0
         
         # Start IF iteration 
-        state['n_iter'] += 1 
+        state['iteration count'] += 1 
         h = state.get('h')
         
         # Store current point
         prev_flat_params = self._gather_flat_params()
         
         # Evaluate f(x) and stencil gradient if first iteration
-        if state['n_iter'] == 1:
+        if state['iteration count'] == 1:
             with torch.no_grad():
                 obj = float(obj_closure_deterministic())
-                state['obj_closure_eval_count'] += 1
+                state['objective closure evaluation count'] += 1
             
             # Store initial objective function closure value
-            state['prev_obj'] = obj
+            state['previous best objective value'] = obj
             
             # Prepare to get directions
             V = torch.tensor([], device=self._device)
@@ -467,8 +492,8 @@ class IMFIL(optim.Optimizer):
                                                       V[:,n])
             
             # Store directions and corresponding objective function closure evaluations
-            state['prev_V'] = V
-            state['prev_F'] = F
+            state['previous V'] = V
+            state['previous F'] = F
             
             # Compute initial stencil gradient 
             F_diffs = F - obj
@@ -478,13 +503,13 @@ class IMFIL(optim.Optimizer):
                                                            beta_grad=beta_grad)
             
             # Store initial stencil gradient
-            state['prev_flat_stencil_grad'] = flat_stencil_grad
+            state['previous flat implicit filtering stencil gradient'] = flat_stencil_grad
             
         
-        prev_best_obj = state.get('prev_obj')
-        V = state.get('prev_V')
-        F = state.get('prev_F')
-        prev_flat_stencil_grad = state.get('prev_flat_stencil_grad')
+        prev_best_obj = state.get('previous best objective value')
+        V = state.get('previous V')
+        F = state.get('previous F')
+        prev_flat_stencil_grad = state.get('previous flat implicit filtering stencil gradient')
         
         # Find minimum of all objective function closure values
         f_best_tensor, ind_best = torch.min(F,
@@ -493,17 +518,17 @@ class IMFIL(optim.Optimizer):
         
         # Check for stencil failure
         if f_best >= prev_best_obj:
-            state['stencil_failure'] = True 
+            state['stencil failure?'] = True 
         else:
-            state['stencil_failure'] = False
+            state['stencil failure?'] = False
             f_try_stencil = f_best
             ind_try_stencil = ind_best 
             
         
-        if state['stencil_failure'] is True or torch.linalg.norm(prev_flat_stencil_grad) <= tau_grad*h:
+        if state['stencil failure?'] is True or torch.linalg.norm(prev_flat_stencil_grad) <= tau_grad*h:
             # Shrink trust region size
             h = tau_tr*h
-        
+            
             if verbose:
                 print("Reducing h to: {}".format(h))
                 
@@ -520,7 +545,7 @@ class IMFIL(optim.Optimizer):
             f_try_ls = self._obj_directional_evaluate(obj_closure_deterministic,
                                                       step_size,
                                                       flat_update_direction)
-            state['line_search_obj_closure_eval_count'] += 1
+            state['line search objective closure evaluation count'] += 1
             
             # Check if new point decreases objective
             found, step_size = self._check_line_search_decrease_condition(step_size=step_size,
@@ -530,18 +555,18 @@ class IMFIL(optim.Optimizer):
             
             while found is False or not opt_utils.is_legal(torch.tensor(f_try_ls, dtype=dtype)):
                 if verbose:
-                    print("Obj. closure evaluation count: {}".format(state['obj_closure_eval_count']))
+                    print("Obj. closure evaluation count: {}".format(state['objective closure evaluation count']))
                     print("Step size: {}".format(step_size))
                     print("New f: {}".format(f_try_ls))
                     print("Old f: {}".format(prev_best_obj))
                     print("Update direction norm: {}".format(torch.linalg.norm(flat_update_direction)))
                     
-                if state['line_search_obj_closure_eval_count'] < max_line_search_obj_closure_evals:
+                if state['line search objective closure evaluation count'] < max_line_search_obj_closure_evals:
                     # Try a new point
                     f_try_ls = self._obj_directional_evaluate(obj_closure_deterministic,
                                                               step_size,
                                                               flat_update_direction)
-                    state['line_search_obj_closure_eval_count'] += 1
+                    state['line search objective closure evaluation count'] += 1
                     found, step_size = self._check_line_search_decrease_condition(step_size=step_size,
                                                                                   obj=prev_best_obj,
                                                                                   obj_try=f_try_ls, 
@@ -597,8 +622,8 @@ class IMFIL(optim.Optimizer):
                                                   V[:,n])
             
         # Store directions and corresponding objective function closure evaluations
-        state['prev_V'] = V
-        state['prev_F'] = F
+        state['previous V'] = V
+        state['previous F'] = F
         
         # Compute new stencil gradient 
         F_diffs = F - prev_best_obj
@@ -608,7 +633,7 @@ class IMFIL(optim.Optimizer):
                                                        beta_grad=beta_grad)
                                                        
         # Update inverse Hessian approximation if appropriate 
-        if not (state['stencil_failure'] is True or torch.linalg.norm(prev_flat_stencil_grad) <= tau_grad*h):    
+        if not (state['stencil failure?'] is True or torch.linalg.norm(prev_flat_stencil_grad) <= tau_grad*h):    
             if hessian_approx in ["BFGS"]:
                 H = state.get('H')
                 s = self._gather_flat_params() - prev_flat_params
@@ -621,8 +646,8 @@ class IMFIL(optim.Optimizer):
         
         # Update state 
         state['h'] = h
-        state['prev_flat_stencil_grad'] = flat_stencil_grad
-        state['prev_obj'] = prev_best_obj
+        state['previous flat implicit filtering stencil gradient'] = flat_stencil_grad
+        state['previous best objective value'] = prev_best_obj
         obj = prev_best_obj
         
         return obj
