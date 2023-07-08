@@ -194,7 +194,7 @@ def surrogate_descent_tr(surrogate_descent_opt_dict,
                                                                 x)   
     
     iter_count = 0
-    iter_max = surrogate_descent_opt_dict["max_surrogate_descent_iter"]
+    iter_max = surrogate_descent_opt_dict["maximum number of surrogate descent iterations"]
     
     while iter_count < iter_max:
         
@@ -225,7 +225,7 @@ def surrogate_descent_tr(surrogate_descent_opt_dict,
         x_proposed = x.detach()
         
         # Check that proposed new point is within trust region
-        norm_ord = surrogate_descent_opt_dict["norm_ord"]
+        norm_ord = surrogate_descent_opt_dict["norm order"]
         delta_dist = torch.linalg.norm(x_proposed - x_0, ord=norm_ord)
         
         if delta_dist <= h:
@@ -314,7 +314,7 @@ def get_param_regularizer_closure(param_regularizer_dict,
     """
     param_reg_type = param_regularizer_dict["type"]
     
-    if param_reg_type in ["model_specific", "Model Specific"]:
+    if param_reg_type in ["model specific", "Model Specific"]:
         alpha_x = param_regularizer_dict["alpha_x"]
         kwargs = param_regularizer_dict["kwargs"]
         
@@ -398,18 +398,18 @@ def compute_scaled_surrogate_fit_obj_on_dataset(surrogate_fit_opt_dict,
     
     # Surrogate fit loss function setup
     # ===============
-    surrogate_fit_loss_func_dict = surrogate_fit_opt_dict["loss_func_dict"]
+    surrogate_fit_loss_func_dict = surrogate_fit_opt_dict["loss function dictionary]
     surrogate_fit_loss_function = surrogate_fit_loss_functions.get_surrogate_fit_loss_function(surrogate_fit_loss_func_dict)
     
     # Parameter regularizer setup
     # ===============
-    param_regularizer_dict = surrogate_fit_opt_dict["param_regularizer_dict"]
+    param_regularizer_dict = surrogate_fit_opt_dict["parameter regularization dictionary"]
     param_regularizer_closure = get_param_regularizer_closure(param_regularizer_dict,
                                                               surrogate_model)
     
     # Surrogate model output regularizer setup
     # ===============
-    surrogate_model_output_regularizer_dict = surrogate_fit_opt_dict["model_output_regularizer_dict"]
+    surrogate_model_output_regularizer_dict = surrogate_fit_opt_dict["model output regularizer dictionary"]
     surrogate_model_output_regularization_function = get_model_output_regularizer(surrogate_model_output_regularizer_dict,
                                                                                   surrogate_model)
     
@@ -577,18 +577,18 @@ def fit_surrogate_model(surrogate_fit_opt_dict,
     
     # Surrogate fit loss function setup
     # ===============
-    surrogate_fit_loss_func_dict = surrogate_fit_opt_dict["loss_func_dict"]
+    surrogate_fit_loss_func_dict = surrogate_fit_opt_dict["loss function dictionary"]
     surrogate_fit_loss_function = surrogate_fit_loss_functions.get_surrogate_fit_loss_function(surrogate_fit_loss_func_dict)
     
     # Parameter regularizer setup
     # ===============
-    param_regularizer_dict = surrogate_fit_opt_dict["param_regularizer_dict"]
+    param_regularizer_dict = surrogate_fit_opt_dict["parameter regularization dictionary"]
     param_regularizer_closure = get_param_regularizer_closure(param_regularizer_dict,
                                                               surrogate_model)
     
     # Surrogate model output regularizer setup
     # ===============
-    surrogate_model_output_regularizer_dict = surrogate_fit_opt_dict["model_output_regularizer_dict"]
+    surrogate_model_output_regularizer_dict = surrogate_fit_opt_dict["model output regularizer dictionary"]
     surrogate_model_output_regularization_function = get_model_output_regularizer(surrogate_model_output_regularizer_dict,
                                                                                   surrogate_model)
     
