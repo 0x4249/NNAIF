@@ -398,7 +398,7 @@ def compute_scaled_surrogate_fit_obj_on_dataset(surrogate_fit_opt_dict,
     
     # Surrogate fit loss function setup
     # ===============
-    surrogate_fit_loss_func_dict = surrogate_fit_opt_dict["loss function dictionary]
+    surrogate_fit_loss_func_dict = surrogate_fit_opt_dict["loss function dictionary"]
     surrogate_fit_loss_function = surrogate_fit_loss_functions.get_surrogate_fit_loss_function(surrogate_fit_loss_func_dict)
     
     # Parameter regularizer setup
