@@ -60,7 +60,7 @@ def get_optimizer(opt_dict,
         H_0 = torch.tensor([])
         
         h_0 = opt_dict.get("h_0", 1.0)
-        hessian_approx = opt_dict.get("hessian approx", "BFGS")
+        hessian_approx = opt_dict.get("hessian approximation", "BFGS")
         
         if hessian_approx in ["BFGS"]:
             initial_inv_hessian = opt_dict["initial inverse hessian"]
@@ -79,7 +79,7 @@ def get_optimizer(opt_dict,
     
     elif opt_name in ["NNAIF"]:
         numel = sum(p.numel() for p in model.parameters())
-        surrogate_model_dict = opt_dict["surrogate model dict"]
+        surrogate_model_dict = opt_dict["surrogate model dictionary"]
         surrogate_model_type = surrogate_model_dict["type"]
         
         if surrogate_model_type in ["RESNET EULER"]:
@@ -104,9 +104,9 @@ def get_optimizer(opt_dict,
         
         H_0 = torch.tensor([])
         
-        surrogate_fit_opt_dict = opt_dict["surrogate fit opt dict"]
+        surrogate_fit_opt_dict = opt_dict["surrogate fit optimizer dictionary"]
         h_0 = opt_dict.get("h_0", 1.0)
-        hessian_approx = opt_dict.get("hessian approx", "BFGS")
+        hessian_approx = opt_dict.get("hessian approximation", "BFGS")
         
         if hessian_approx in ["BFGS"]:
             initial_inv_hessian = opt_dict["initial inverse hessian"]
@@ -130,7 +130,7 @@ def get_optimizer(opt_dict,
         
         H_0 = torch.tensor([])
         
-        hessian_approx = opt_dict.get("hessian approx", "BFGS")
+        hessian_approx = opt_dict.get("hessian approximation", "BFGS")
         
         if hessian_approx in ["BFGS"]:
             initial_inv_hessian = opt_dict["initial inverse hessian"]
