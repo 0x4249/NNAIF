@@ -15,7 +15,7 @@ def get_surrogate_fit_loss_function(surrogate_fit_loss_func_dict):
     """
     surrogate_fit_loss_func_name = surrogate_fit_loss_func_dict["name"]
     
-    if surrogate_fit_loss_func_name in ["squared_error"]:
+    if surrogate_fit_loss_func_name in ["squared error"]:
         surrogate_fit_loss_function = squared_error
         
         
