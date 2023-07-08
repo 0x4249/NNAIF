@@ -622,8 +622,8 @@ if __name__ == '__main__':
     # Parse command line arguments
     # ===============
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dimension_category', nargs='+', help='Low, Medium, High or Very High Dimensional')
-    parser.add_argument('-b', '--benchmark', nargs='+', help='Benchmark name')
+    parser.add_argument('-d', '--dimension_category', required=True, help='Low, Medium, High or Very High Dimensional')
+    parser.add_argument('-b', '--benchmark', required=True, help='Benchmark name')
     parser.add_argument('-sb', '--save_directory_base', required=True, help='Base folder for saving results')
     parser.add_argument('-pc', '--pycutest_cache', required=True, help='Location of PyCUTEst cache')
     parser.add_argument('-r', '--reset', type=bool, default=False, help='Ignore previous results and start over')
