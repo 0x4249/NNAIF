@@ -91,8 +91,8 @@ def get_surrogate_descent_optimizer(surrogate_descent_opt_dict,
     # PyTorch default optimizers
     # ===============
     if surrogate_opt_name in ["ADAM"]:
-        amsgrad = surrogate_descent_opt_dict.get("amsgrad", False)
-        lr = surrogate_descent_opt_dict.get("lr", 1e-3)
+        amsgrad = surrogate_descent_opt_dict.get("amsgrad?", False)
+        lr = surrogate_descent_opt_dict.get("learning rate", 1e-3)
         betas0 = surrogate_descent_opt_dict.get("betas0", 0.9)
         betas1 = surrogate_descent_opt_dict.get("betas1", 0.999)
         betas = (betas0, betas1)
@@ -103,7 +103,7 @@ def get_surrogate_descent_optimizer(surrogate_descent_opt_dict,
         
         
     elif surrogate_opt_name in ["SGD"]:
-        lr = surrogate_descent_opt_dict.get("lr", 1e-3)
+        lr = surrogate_descent_opt_dict.get("learning rate", 1e-3)
         surrogate_descent_opt = optim.SGD(params=[x],
                                           lr=lr)
     
@@ -276,8 +276,8 @@ def get_surrogate_fit_optimizer(surrogate_fit_opt_dict,
     # PyTorch default optimizers
     # ===============
     if surrogate_fit_opt_name in ["ADAM"]:
-        amsgrad = surrogate_fit_opt_dict.get("amsgrad", False)
-        lr = surrogate_fit_opt_dict.get("lr", 1e-3)
+        amsgrad = surrogate_fit_opt_dict.get("amsgrad?", False)
+        lr = surrogate_fit_opt_dict.get("learning rate", 1e-3)
         betas0 = surrogate_fit_opt_dict.get("betas0", 0.9)
         betas1 = surrogate_fit_opt_dict.get("betas1", 0.999)
         betas = (betas0, betas1)        
@@ -288,7 +288,7 @@ def get_surrogate_fit_optimizer(surrogate_fit_opt_dict,
         
         
     elif surrogate_fit_opt_name in ["SGD"]:
-        lr = surrogate_fit_opt_dict.get("lr", 1e-3)
+        lr = surrogate_fit_opt_dict.get("learning rate", 1e-3)
         surrogate_fit_opt = optim.SGD(params=surrogate_model.parameters(),
                                       lr=lr)
     
@@ -601,7 +601,7 @@ def fit_surrogate_model(surrogate_fit_opt_dict,
     scaled_surrogate_fit_obj_means = []
     scaled_surrogate_fit_loss_means = []
     
-    max_epochs = surrogate_fit_opt_dict["max epochs"]
+    max_epochs = surrogate_fit_opt_dict["maximum number of epochs"]
     loss_tol = surrogate_fit_opt_dict["loss tolerance"]
     
     # Main data fitting loop
