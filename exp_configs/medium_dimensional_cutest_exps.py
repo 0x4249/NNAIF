@@ -23,7 +23,7 @@ def get_medium_dimensional_CUTEst_benchmark_dict(benchmark_name,
     
     # Medium dimensional (50 < d <= 200) problems
     # ===============
-    if benchmark_name in ["Medium Dimensional No Noise"]:
+    if benchmark_name in ["CUTEst No Noise"]:
         cutest_problem_dict_list = [{"CUTEst problem":"ARGTRIGLS",
                                      "SIF params":{"N":200},
                                      "solution":0.0},
@@ -67,7 +67,7 @@ def get_medium_dimensional_CUTEst_benchmark_dict(benchmark_name,
                          }
     
     
-    elif benchmark_name in ["Medium Dimensional Scaled Noise"]:
+    elif benchmark_name in ["CUTEst Scaled Noise"]:
         cutest_problem_dict_list = [{"CUTEst problem":"ARGTRIGLS",
                                      "SIF params":{"N":200},
                                      "solution":0.0},

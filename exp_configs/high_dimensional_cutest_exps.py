@@ -23,7 +23,7 @@ def get_high_dimensional_CUTEst_benchmark_dict(benchmark_name,
     
     # High dimensional (200 < d <= 3000) problems
     # ===============
-    if benchmark_name in ["High Dimensional No Noise"]:
+    if benchmark_name in ["CUTEst No Noise"]:
         cutest_problem_dict_list = [{"CUTEst problem":"ARWHEAD",
                                      "SIF params":{"N":500},
                                      "solution":0.0},
@@ -67,7 +67,7 @@ def get_high_dimensional_CUTEst_benchmark_dict(benchmark_name,
                          }
     
     
-    elif benchmark_name in ["High Dimensional Scaled Noise"]:
+    elif benchmark_name in ["CUTEst Scaled Noise"]:
         cutest_problem_dict_list = [{"CUTEst problem":"ARWHEAD",
                                      "SIF params":{"N":500},
                                      "solution":0.0},
