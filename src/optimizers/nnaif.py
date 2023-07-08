@@ -52,10 +52,10 @@ class NNAIF(optim.Optimizer):
         if hessian_approx not in ["I", "BFGS"]:
             raise ValueError("Invalid Hessian approximation mode: {}".format(hessian_approx))
             
-        defaults = dict(h_0=h_0,
-                        hessian_approx=hessian_approx,
-                        dtype=dtype,
-                        verbose=verbose)
+        defaults = {"h_0":h_0,
+                    "hessian approximation":hessian_approx,
+                    "dtype":dtype,
+                    "verbose":verbose}
         super().__init__(params, defaults)
 
         if len(self.param_groups) != 1:
@@ -71,19 +71,45 @@ class NNAIF(optim.Optimizer):
         # NOTE: NNAIF has only global state, but we register it as state for
         # the first param, because this helps with casting in load_state_dict
         state = self.state[self._params[0]]
-        state.setdefault('n_iter', 0) # iteration count
-        state.setdefault('prev_flat_stencil_grad_IF', None) # previous implicit filtering flat stencil gradient
-        state.setdefault('prev_obj', None) # previous best objective function value
-        state.setdefault('prev_V_IF', None) # previous implicit filtering directions 
-        state.setdefault('prev_F_IF', None) # previous implicit filtering objective function closure evaluations
-        state.setdefault('obj_closure_eval_count', 0) # count of objective function closure evaluations at current iteration
-        state.setdefault('prev_iter_IF_success', False) # flag for whether previous iteration was implicit filtering success 
-        state.setdefault('line_search_obj_closure_eval_count', 0) # current iteration count of objective function evaluations for line search
-        state.setdefault('h', h_0) # stencil size
-        state.setdefault('stencil_failure', False) # flag for stencil failure
-        state.setdefault('H', H_0.to(device=self._device)) # Hessian approximation 
-        state.setdefault('X', torch.tensor([], device=self._device)) # tensor containing all x values as its columns
-        state.setdefault('fs', torch.tensor([], device=self._device)) # tensor containing all true f values
+        
+        # iteration count
+        state.setdefault('iteration count', 0)
+        
+        # previous implicit filtering flat stencil gradient
+        state.setdefault('previous flat implicit filtering stencil gradient', None) 
+        
+        # previous best objective function value
+        state.setdefault('previous best objective value', None)
+        
+        # previous implicit filtering stencil directions
+        state.setdefault('previous implicit filtering V', None)
+        
+        # previous implicit filtering objective function closure evaluations
+        state.setdefault('previous implicit filtering F', None)
+        
+        # count of objective function closure evaluations at current iteration
+        state.setdefault('objective closure evaluation count', 0)
+        
+        # flag for whether previous iteration was implicit filtering success
+        state.setdefault('previous iteration implicit filtering success?', False)
+        
+        # current iteration count of objective function evaluations for line search
+        state.setdefault('line search objective closure evaluation count', 0)
+        
+        # stencil size
+        state.setdefault('h', h_0)
+        
+        # flag for stencil failure
+        state.setdefault('stencil failure?', False)
+        
+        # Hessian approximation
+        state.setdefault('H', H_0.to(device=self._device))
+        
+        # tensor containing all x values as its columns
+        state.setdefault('X', torch.tensor([], device=self._device))
+        
+        # tensor containing all true f values
+        state.setdefault('fs', torch.tensor([], device=self._device))
         
         
     def _calc_numel(self):
@@ -205,7 +231,7 @@ class NNAIF(optim.Optimizer):
         with torch.no_grad():
             # evaluate objective function only
             obj = obj_closure()
-            state['obj_closure_eval_count'] += 1
+            state['objective closure evaluation count'] += 1
             
             # restore parameters to initial values
             self._set_param(x) 
@@ -239,7 +265,7 @@ class NNAIF(optim.Optimizer):
         with torch.no_grad():
             # evaluate objective function only
             obj = obj_closure() 
-            state['obj_closure_eval_count'] += 1
+            state['objective closure evaluation count'] += 1
             
             # restore parameters to initial values
             self._set_param(x) 
@@ -255,9 +281,10 @@ class NNAIF(optim.Optimizer):
         Get stencil directions.
         
         Args:
-            stencil_type (string): Stencil type - either "CD" for central finite difference stencil (size 2d), "a-PBS" 
-                                   for an asymmetric positive basis stencil (size d+1), "FD" for forward finite 
-                                   difference stencil (size d), or "None". 
+            stencil_type (string): stencil type - "central difference" for central finite difference stencil (size 2d), 
+                                   "asymmetric positive basis" for asymmetric positive basis stencil (size d+1),
+                                   "forward difference" for forward finite difference stencil (size d), 
+                                   or "None" to return an empty tensor. 
         
         Returns:
             V_stencil (torch.Tensor): matrix of stencil directions.
@@ -265,16 +292,16 @@ class NNAIF(optim.Optimizer):
         d = self._calc_numel()
         
         # Get stencil directions
-        if stencil_type in ["CD"]:
+        if stencil_type in ["central difference", "Central Difference"]:
             V_pos = torch.eye(d, device=self._device)
             V_neg = -V_pos
             V_stencil = torch.cat((V_pos, V_neg), dim=1)
             
-        elif stencil_type in ["a-PBS"]:
+        elif stencil_type in ["asymmetric positive basis", "Asymmetric Positive Basis"]:
             V_pos = torch.eye(d, device=self._device)
             V_stencil = torch.cat((V_pos, (-1/(d**(1/2)))*torch.ones(d, device=self._device).unsqueeze(1)), dim=1)
             
-        elif stencil_type in ["FD"]:
+        elif stencil_type in ["forward difference", "Forward Difference"]:
             V_pos = torch.eye(d, device=self._device)
             V_stencil = V_pos
             
@@ -450,9 +477,10 @@ class NNAIF(optim.Optimizer):
             out_transform (callable): transforms surrogate model output to a scalar.
             surrogate_fit_opt_dict (dict): dictionary storing optimizer information for fitting surrogate model. 
             surrogate_descent_opt_dict (dict): dictionary storing optimizer information for surrogate descent.
-            stencil_type (string): Stencil type - either "CD" for central finite difference stencil (size 2d), "a-PBS" 
-                                   for an asymmetric positive basis stencil (size d+1), "FD" for forward finite 
-                                   difference stencil (size d), or "None" (use "None" to rely on only custom_sampler). 
+            stencil_type (string): stencil type - "central difference" for central finite difference stencil (size 2d), 
+                                   "asymmetric positive basis" for asymmetric positive basis stencil (size d+1),
+                                   "forward difference" for forward finite difference stencil (size d), 
+                                   or "None" to rely on only custom_sampler.
             tau_tr (float): factor in (0,1) by which to shrink h upon failure (default: 0.5).
             tau_grad (float): factor by which to compare stencil gradient norm relative to h (default: 1e-2).
             h_surr_min (float): do not fit the surrogate model once h is below this value (default: 1e-3).
@@ -472,7 +500,10 @@ class NNAIF(optim.Optimizer):
             obj (float): objective function value of best solution. 
         """
         # Check that stencil type is valid
-        if stencil_type not in ["CD", "a-PBS", "FD", "None"]:
+        if stencil_type not in ["central difference", "Central Difference",
+                                "asymmetric positive basis", "Asymmetric Positive Basis",
+                                "forward difference", "Forward Difference",
+                                "None"]:
             raise ValueError("Invalid stencil type: {}".format(stencil_type))
         
         # Check that tau_tr is valid
@@ -492,7 +523,7 @@ class NNAIF(optim.Optimizer):
             raise ValueError("Invalid initial line search step size: {}".format(step_size_ls)) 
         
         state = self.state[self._params[0]]
-        state['step_size'] = step_size_ls
+        state['step size'] = step_size_ls
         
         # Define deterministic objective function closure
         seed = time.time()
@@ -503,29 +534,29 @@ class NNAIF(optim.Optimizer):
         # Load optimization settings
         group = self.param_groups[0]
         h_0 = group['h_0']
-        hessian_approx = group['hessian_approx']
+        hessian_approx = group['hessian approximation']
         dtype = group['dtype']        
         verbose = group['verbose']
         
         # Set objective function closure evaluation counters to zero
-        state['obj_closure_eval_count'] = 0
-        state['line_search_obj_closure_eval_count'] = 0
+        state['objective closure evaluation count'] = 0
+        state['line search objective closure evaluation count'] = 0
         
         # Start NNAIF iteration 
-        state['n_iter'] += 1 
+        state['iteration count'] += 1 
         h = state.get('h')
         
         # Store current point
         prev_flat_params = self._gather_flat_params()
         
         # Evaluate f(x) and stencil gradient if first iteration
-        if state['n_iter'] == 1:
+        if state['iteration count'] == 1:
             with torch.no_grad():
                 obj = float(obj_closure_deterministic())
-                state['obj_closure_eval_count'] += 1
+                state['objective closure evaluation count'] += 1
             
             # Store initial objective function closure value
-            state['prev_obj'] = obj
+            state['previous best objective value'] = obj
             
             # Store initial point
             X = state.get('X')
@@ -557,8 +588,8 @@ class NNAIF(optim.Optimizer):
                                                          V_IF[:,n])
             
             # Store implicit filtering directions and corresponding objective function closure evaluations
-            state['prev_V_IF'] = V_IF
-            state['prev_F_IF'] = F_IF
+            state['previous implicit filtering V'] = V_IF
+            state['previous implicit filtering F'] = F_IF
             
             X_IF = torch.zeros_like(V_IF)
             
@@ -578,13 +609,13 @@ class NNAIF(optim.Optimizer):
                                                               beta_grad=beta_grad)
             
             # Store initial stencil gradient
-            state['prev_flat_stencil_grad_IF'] = flat_stencil_grad_IF                       
+            state['previous flat implicit filtering stencil gradient'] = flat_stencil_grad_IF                       
             
             
-        prev_best_obj = state.get('prev_obj')
-        V_IF = state.get('prev_V_IF')
-        F_IF = state.get('prev_F_IF')
-        prev_flat_stencil_grad_IF = state.get('prev_flat_stencil_grad_IF')               
+        prev_best_obj = state.get('previous best objective value')
+        V_IF = state.get('previous implicit filtering V')
+        F_IF = state.get('previous implicit filtering F')
+        prev_flat_stencil_grad_IF = state.get('previous flat implicit filtering stencil gradient')               
         
         X = state.get('X')
         fs = state.get('fs')
@@ -643,7 +674,7 @@ class NNAIF(optim.Optimizer):
             # Accept the proposed point
             prev_best_obj = f_proposed
             self._update_params_to_point(x_proposed)
-            state['prev_iter_IF_success'] = False
+            state['previous iteration implicit filtering success?'] = False
             
             if verbose:
                 print("Surrogate model point chosen.")
@@ -658,17 +689,17 @@ class NNAIF(optim.Optimizer):
             
             # Check for stencil failure
             if f_IF_best >= prev_best_obj:
-                state['stencil_failure'] = True 
+                state['stencil failure?'] = True 
             else:
-                state['stencil_failure'] = False
+                state['stencil failure?'] = False
                 f_IF_try_stencil = f_IF_best
                 ind_IF_try_stencil = ind_IF_best
                 
             
-            if state['stencil_failure'] is True or torch.linalg.norm(prev_flat_stencil_grad_IF) <= tau_grad*h:
+            if state['stencil failure?'] is True or torch.linalg.norm(prev_flat_stencil_grad_IF) <= tau_grad*h:
                 # Shrink trust region size
                 h = tau_tr*h
-                state['prev_iter_IF_success'] = False
+                state['previous iteration implicit filtering success?'] = False
                 
                 if verbose:
                     print("IF failed, reducing h to: {}".format(h))
@@ -682,11 +713,11 @@ class NNAIF(optim.Optimizer):
                     flat_update_direction = - H@prev_flat_stencil_grad_IF
                 
                 # Line search
-                step_size = state.get('step_size')
+                step_size = state.get('step size')
                 f_IF_try_ls = self._obj_directional_evaluate(obj_closure_deterministic,
                                                              step_size,
                                                              flat_update_direction)
-                state['line_search_obj_closure_eval_count'] += 1
+                state['line search objective closure evaluation count'] += 1
                 
                 # Check if new point decreases objective
                 found, step_size = self._check_line_search_decrease_condition(step_size=step_size,
@@ -696,18 +727,18 @@ class NNAIF(optim.Optimizer):
                 
                 while found is False or not opt_utils.is_legal(torch.tensor(f_IF_try_ls, dtype=dtype)):
                     if verbose:
-                        print("Obj. closure evaluation count: {}".format(state['obj_closure_eval_count']))
+                        print("Obj. closure evaluation count: {}".format(state['objective closure evaluation count']))
                         print("Step size: {}".format(step_size))
                         print("New f: {}".format(f_IF_try_ls))
                         print("Old f: {}".format(prev_best_obj))
                         print("Update direction norm: {}".format(torch.linalg.norm(flat_update_direction)))
                         
-                    if state['line_search_obj_closure_eval_count'] < max_line_search_obj_closure_evals:
+                    if state['line search objective closure evaluation count'] < max_line_search_obj_closure_evals:
                         # Try a new point
                         f_IF_try_ls = self._obj_directional_evaluate(obj_closure_deterministic,
                                                                      step_size,
                                                                      flat_update_direction)
-                        state['line_search_obj_closure_eval_count'] += 1
+                        state['line search objective closure evaluation count'] += 1
                         found, step_size = self._check_line_search_decrease_condition(step_size=step_size,
                                                                                       obj=prev_best_obj,
                                                                                       obj_try=f_IF_try_ls, 
@@ -801,8 +832,8 @@ class NNAIF(optim.Optimizer):
                                                      V_IF[:,n])
         
         # Store implicit filtering directions and corresponding objective function closure evaluations
-        state['prev_V_IF'] = V_IF
-        state['prev_F_IF'] = F_IF
+        state['previous implicit filtering V'] = V_IF
+        state['previous implicit filtering F'] = F_IF
                 
         X_IF = torch.zeros_like(V_IF)
             
@@ -822,7 +853,7 @@ class NNAIF(optim.Optimizer):
                                                           beta_grad=beta_grad)
                                                           
         # Update inverse Hessian approximation if appropriate 
-        if not (state['stencil_failure'] is True or torch.linalg.norm(prev_flat_stencil_grad_IF) <= tau_grad*h):
+        if not (state['stencil failure?'] is True or torch.linalg.norm(prev_flat_stencil_grad_IF) <= tau_grad*h):
             if hessian_approx in ["BFGS"]:
                 H = state.get('H')
                 s = curr_flat_params - prev_flat_params
@@ -833,13 +864,13 @@ class NNAIF(optim.Optimizer):
                 state['H'] = H_new
             
             
-        state['prev_iter_IF_success'] = True           
+        state['previous iteration implicit filtering success?'] = True
         
         
         # Update state
         state['h'] = h
-        state['prev_flat_stencil_grad_IF'] = flat_stencil_grad_IF
-        state['prev_obj'] = prev_best_obj
+        state['previous flat implicit filtering stencil gradient'] = flat_stencil_grad_IF
+        state['previous best objective value'] = prev_best_obj
         obj = prev_best_obj
         
         return obj
