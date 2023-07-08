@@ -119,7 +119,7 @@ def opt_step(opt_dict,
         step_size_ls = opt_dict["line search starting step size"]
         max_line_search_obj_closure_evals = opt_dict["maximum number of line search objective closure evaluations"]
         tau_ls = opt_dict["tau_ls"]
-        stencil_wins = opt_dict["stencil_wins?"]
+        stencil_wins = opt_dict["stencil wins?"]
         num_dirs_custom = opt_dict["number of custom sampler directions"]
         beta_grad = opt_dict["stencil gradient beta"]
         
@@ -191,7 +191,7 @@ def opt_step(opt_dict,
         step_size_ls = opt_dict["line search starting step size"]
         max_line_search_obj_closure_evals = opt_dict["maximum number of line search objective closure evaluations"]
         tau_ls = opt_dict["tau_ls"]
-        stencil_wins = opt_dict["stencil_wins?"]
+        stencil_wins = opt_dict["stencil wins?"]
         num_dirs_custom = opt_dict["number of custom sampler directions"]
         beta_grad = opt_dict["stencil gradient beta"]
         output_transform_dict = opt_dict["output transform dictionary"]

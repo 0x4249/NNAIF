@@ -434,7 +434,7 @@ class IMFIL(optim.Optimizer):
             raise ValueError("Invalid initial line search step size: {}".format(step_size_ls)) 
         
         state = self.state[self._params[0]]
-        state['step_size'] = step_size_ls
+        state['step size'] = step_size_ls
         
         # Define deterministic objective function closure
         seed = time.time()
@@ -541,7 +541,7 @@ class IMFIL(optim.Optimizer):
                 flat_update_direction = - H@prev_flat_stencil_grad
             
             # Line search
-            step_size = state.get('step_size')
+            step_size = state.get('step size')
             f_try_ls = self._obj_directional_evaluate(obj_closure_deterministic,
                                                       step_size,
                                                       flat_update_direction)
