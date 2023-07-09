@@ -58,7 +58,7 @@ def opt_step(opt_dict,
         opt (torch.optim.Optimizer): PyTorch optimizer.
         model (torch.nn.Module): PyTorch model.
         num_samples (int): number of samples to average CUTEst objective function and gradient over.
-        sampler (callable): argumentless function that generates d-dimensional vectors.
+        sampler (callable, optional): argumentless function that generates d-dimensional vectors.
         
     Returns:
         obj (float): objective function value of best solution. 
@@ -622,14 +622,22 @@ if __name__ == '__main__':
     # Parse command line arguments
     # ===============
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dimension_category', required=True, help='Low, Medium, High or Very High Dimensional')
-    parser.add_argument('-b', '--benchmark', required=True, help='Benchmark name')
-    parser.add_argument('-sb', '--save_directory_base', required=True, help='Base folder for saving results')
-    parser.add_argument('-pc', '--pycutest_cache', required=True, help='Location of PyCUTEst cache')
-    parser.add_argument('-r', '--reset', type=bool, default=False, help='Ignore previous results and start over')
-    parser.add_argument('-ei', '--exp_id', default=None, help='Experiment ID')
-    parser.add_argument('-c', '--use_cuda', type=bool, default=False, help='Use GPU?')
-    parser.add_argument('-q', '--quiet', type=bool, default=False, help='Suppress some printed messages?')
+    parser.add_argument('-d', '--dimension_category', required=True, 
+                        help="Either Low Dimensional, Medium Dimensional, High Dimensional or Very High Dimensional")
+    parser.add_argument('-b', '--benchmark', required=True, 
+                        help="Benchmark name")
+    parser.add_argument('-sb', '--save_directory_base', required=True, 
+                        help="Base folder for saving results")
+    parser.add_argument('-pc', '--pycutest_cache', required=True, 
+                        help="Location of PyCUTEst cache")
+    parser.add_argument('-r', '--reset', type=bool, default=False, 
+                        help="1 -> ignore previous results and start over, 0 -> resume from previous results")
+    parser.add_argument('-ei', '--exp_id', default=None, 
+                        help="Experiment ID")
+    parser.add_argument('-c', '--use_cuda', type=bool, default=False, 
+                        help="1 -> use GPU, 0 -> do not use GPU")
+    parser.add_argument('-q', '--quiet', type=bool, default=False, 
+                        help="1 -> suppress some printed messages, 0 -> do not suppress some printed messages")
     args = parser.parse_args()
     
     # Show parsed arguments
