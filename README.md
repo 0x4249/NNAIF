@@ -24,7 +24,7 @@ execute the following via terminal:
 python run_cutest_experiments.py -d "Low Dimensional" -b "CUTEst Scaled Noise" -sb "<save-location>" -pc "<PyCUTEst-cache-location>" -c 1
 ```
 
-To run the medium dimensional (50 < d <= 200) (0 < d <= 50) CUTEst experiments from Section 5.2 of the paper, using a
+To run the medium dimensional (50 < d <= 200) CUTEst experiments from Section 5.2 of the paper, using a
 GPU if available, execute the following via terminal:
 ```
 python run_cutest_experiments.py -d "Medium Dimensional" -b "CUTEst Scaled Noise" -sb "<save-location>" -pc "<PyCUTEst-cache-location>" -c 1
@@ -42,7 +42,11 @@ execute the following via terminal:
 python run_cutest_experiments.py -d "Very High Dimensional" -b "CUTEst Scaled Noise" -sb "<save-location>" -pc "<PyCUTEst-cache-location>" -c 1
 ```
 
-The CUTEst experiment configurations can be changed by editing the files in the folder "exp_configs".
+The CUTEst experiment configurations can be changed by editing the files in the folder "exp_configs". An example Jupyter notebook
+for visualizing the results of the CUTEst numerical experiments is provided by:
+```
+visualize_CUTEst_results.ipynb
+```
 
 The numerical experiments code contained in this Git repository was originally tested using Python 3.8.15 on a computer 
 with the Ubuntu 20.04 LTS operating system installed.
