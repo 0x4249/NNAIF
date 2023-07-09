@@ -40,11 +40,11 @@ python run_cutest_experiments.py -d "High Dimensional" -b "CUTEst Scaled Noise" 
 To run the very high dimensional (d > 3000) CUTEst experiments from Section 5.2 of the paper, using a GPU if available,
 execute the following via terminal:
 ```
-python run_cutest_experiments.py -d "High Dimensional" -b "CUTEst Scaled Noise" -sb "<save-location>" 
+python run_cutest_experiments.py -d "Very High Dimensional" -b "CUTEst Scaled Noise" -sb "<save-location>" 
 -pc "<PyCUTEst-cache-location>" -c 1
 ```
 
-The experiment configurations can be changed by editing the files in the folder "exp_configs".
+The CUTEst experiment configurations can be changed by editing the files in the folder "exp_configs".
 
 The numerical experiments code contained in this Git repository was originally tested using Python 3.8.15 on a computer 
 with the Ubuntu 20.04 LTS operating system installed.
