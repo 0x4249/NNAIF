@@ -15,8 +15,8 @@ For a description of the relevant arguments, execute the following via terminal:
 ```
 python run_cutest_experiments.py --help
 ```
-In what follows below, "<save-location>" is a placeholder for the path of the folder where results will be saved, and 
-"<PyCUTEst-cache-location>" is a placeholder for the path of the PyCUTEst cache.
+In what follows below, `<save-location>` is a placeholder for the path of the folder where results will be saved, and 
+`<PyCUTEst-cache-location>` is a placeholder for the path of the PyCUTEst cache.
 
 To run the low dimensional (0 < d <= 50) CUTEst experiments from Section 5.2 of the paper, using a GPU if available,
 execute the following via terminal:
