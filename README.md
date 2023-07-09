@@ -44,6 +44,10 @@ python run_cutest_experiments.py -d "High Dimensional" -b "CUTEst Scaled Noise" 
 -pc "<PyCUTEst-cache-location>" -c 1
 ```
 
+The experiment configurations can be changed by editing the files in the folder "exp_configs".
+
+The numerical experiments code contained in this Git repository was originally tested using Python 3.8.15 on a computer 
+with the Ubuntu 20.04 LTS operating system installed.
 
 # Citation
 If you use this code, please cite the paper:
