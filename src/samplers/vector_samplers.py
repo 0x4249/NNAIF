@@ -13,7 +13,7 @@ def multivariate_normal_random_sampler(mu,
         Sigma (torch.Tensor): covariance matrix of the multivariate normal distribution.
         
     Returns:
-        sampler (callable): Argumentless function returning a sample from specified multivariate normal distribution.
+        sampler (callable): argumentless function returning a sample from specified multivariate normal distribution.
     """
     d = mu.shape[0]
     L = torch.linalg.cholesky(Sigma)
@@ -42,7 +42,7 @@ def spherical_ball_uniform_random_sampler(d=2,
         r (float): radius of the ball.
         
     Returns:
-        sampler (callable): Argumentless function returning a sample from specified uniform distribution inside a
+        sampler (callable): argumentless function returning a sample from specified uniform distribution inside a
                             spherical ball centered at zero.
     """
     def spherical_ball_uniform_random_sample(d,
@@ -73,7 +73,7 @@ def spherical_surface_uniform_random_sampler(d=2,
         r (float): radius of the ball.
         
     Returns:
-        sampler (callable): Argumentless function returning a sample from specified uniform distribution on the surface 
+        sampler (callable): argumentless function returning a sample from specified uniform distribution on the surface 
                             of a spherical ball centered at zero.
     """
     def spherical_surface_uniform_random_sample(d,

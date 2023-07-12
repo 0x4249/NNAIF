@@ -48,8 +48,7 @@ for visualizing the results of the CUTEst numerical experiments is provided by:
 visualize_CUTEst_results.ipynb
 ```
 
-The numerical experiments code contained in this Git repository was originally tested using Python 3.8.15 on a computer 
-with the Ubuntu 20.04 LTS operating system installed.
+The numerical experiments code contained in this Git repository was originally tested using Python 3.8.15 on a desktop computer equipped with an NVIDIA RTX 2080 TI GPU and the Ubuntu 20.04 LTS Linux operating system. The file `environment.yml` describes the conda environment used to perform the numerical experiments.
 
 # Citation
 If you use this code, please cite the paper:

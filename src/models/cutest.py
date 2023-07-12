@@ -66,8 +66,8 @@ class CUTEstFunctionAdditiveNoise(autograd.Function):
             input (torch.Tensor): point to evaluate the CUTEst objective function at. 
             problem (pycutest.problem_class.CUTEstProblem): PyCUTEst problem.
             num_samples (int): number of samples over which to average function and gradient noise. 
-            obj_noise_func (callable): Argumentless function returning a single sample of function noise.
-            grad_noise_func (callable): Argumentless function returning a single sample of gradient noise.
+            obj_noise_func (callable): argumentless function returning a single sample of function noise.
+            grad_noise_func (callable): argumentless function returning a single sample of gradient noise.
             dtype (dtype or string): the desired data type (default: torch.float).
         
         Returns:
@@ -235,8 +235,8 @@ class CUTEstProblemAdditiveNoise(nn.Module):
     
     Args:
         problem (pycutest.problem_class.CUTEstProblem): PyCUTEst problem. 
-        obj_noise_func (callable): Argumentless function returning a single sample of function noise.
-        grad_noise_func (callable): Argumentless function returning a single sample of gradient noise.
+        obj_noise_func (callable): argumentless function returning a single sample of function noise.
+        grad_noise_func (callable): argumentless function returning a single sample of gradient noise.
         dtype (dtype or string): the desired data type (default: torch.float).
     """
     def __init__(self, 

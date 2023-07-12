@@ -362,8 +362,8 @@ class IMFIL(optim.Optimizer):
             tau (float): backtracking factor 0 < tau < 1.
             
         Returns:
-            found (bool): true if decrease condition is satisfied, false otherwise.
-            step_size (float): step size after applying backtracking (backtracking only occurs if found is false).
+            found (bool): True if decrease condition is satisfied, False otherwise.
+            step_size (float): step size after applying backtracking (backtracking only occurs if found is False).
         """
         found = False
         
@@ -406,7 +406,7 @@ class IMFIL(optim.Optimizer):
             step_size_ls (float): initial line search step size (default: 1e0).
             max_line_search_obj_closure_evals (int): maximum number of objective function closure evaluations for line search (default: 3).
             tau_ls (float): backtracking factor in (0,1) (default: 0.1).
-            stencil_wins (bool): take stencil point if it is better than the line search point (default: false).
+            stencil_wins (bool): take stencil point if it is better than the line search point (default: False).
             custom_sampler (callable, optional): argumentless function that generates d-dimensional vectors.
             num_dirs_custom (int): number of directions to generate using custom_sampler (default: 0).
             beta_grad (float): regularization parameter to use when solving for stencil gradient (default: 1e-5).
