@@ -1,6 +1,6 @@
 # The Neural Network Accelerated Implicit Filtering (NNAIF) Paper
 This Git repository contains the Python code for running the numerical experiments discussed in the paper
-"Neural Network Accelerated Implicit Filtering: Integrating Neural Network Surrogates With Provably Convergent Derivative Free Optimization Methods" by Brian Irwin, Eldad Haber, Raviv Gal, and Avi Ziv. The ICML 2023 paper can be found on OpenReview at [https://openreview.net/forum?id=KG1eLtsX61](https://openreview.net/forum?id=KG1eLtsX61).
+"Neural Network Accelerated Implicit Filtering: Integrating Neural Network Surrogates With Provably Convergent Derivative Free Optimization Methods" by Brian Irwin, Eldad Haber, Raviv Gal, and Avi Ziv. The ICML 2023 paper is available at [https://proceedings.mlr.press/v202/irwin23a.html](https://proceedings.mlr.press/v202/irwin23a.html).
 
 
 # Running The Code
@@ -53,19 +53,24 @@ The numerical experiments code contained in this Git repository was originally t
 # Citation
 If you use this code, please cite the paper:
 
-Irwin, B., Haber, E., Gal, R., Ziv, A. Neural Network Accelerated Implicit Filtering: Integrating Neural Network Surrogates With Provably Convergent Derivative Free Optimization Methods. *Proceedings of the 40th International Conference on Machine Learning*, 2023.
+Irwin, B., Haber, E., Gal, R. & Ziv, A.. (2023). Neural Network Accelerated Implicit Filtering: Integrating Neural Network Surrogates With Provably Convergent Derivative Free Optimization Methods. *Proceedings of the 40th International Conference on Machine Learning*, in *Proceedings of Machine Learning Research* 202:14376-14389 Available from https://proceedings.mlr.press/v202/irwin23a.html.
 
 BibTeX: 
 ```
-@inproceedings{irwin-nnaif-2023,
-    Author = {Brian Irwin and Eldad Haber and Raviv Gal and Avi Ziv},
-    Title = {Neural Network Accelerated Implicit Filtering: Integrating Neural Network Surrogates With Provably Convergent Derivative Free Optimization Methods},
-    Booktitle = {Proceedings of the 40th International Conference on Machine Learning},
-    Year = {2023},
-    Series = {Proceedings of Machine Learning Research},
-    Address = {Honolulu, USA},
-    Publisher = {PMLR}
+@InProceedings{pmlr-v202-irwin23a,
+  title = 	 {Neural Network Accelerated Implicit Filtering: Integrating Neural Network Surrogates With Provably Convergent Derivative Free Optimization Methods},
+  author =       {Irwin, Brian and Haber, Eldad and Gal, Raviv and Ziv, Avi},
+  booktitle = 	 {Proceedings of the 40th International Conference on Machine Learning},
+  pages = 	 {14376--14389},
+  year = 	 {2023},
+  editor = 	 {Krause, Andreas and Brunskill, Emma and Cho, Kyunghyun and Engelhardt, Barbara and Sabato, Sivan and Scarlett, Jonathan},
+  volume = 	 {202},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {23--29 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://proceedings.mlr.press/v202/irwin23a/irwin23a.pdf},
+  url = 	 {https://proceedings.mlr.press/v202/irwin23a.html},
+  abstract = 	 {In this paper, we introduce neural network accelerated implicit filtering (NNAIF), a novel family of methods for solving noisy derivative free (i.e. black box, zeroth order) optimization problems. NNAIF intelligently combines the established literature on implicit filtering (IF) optimization methods with a neural network (NN) surrogate model of the objective function, resulting in accelerated derivative free methods for unconstrained optimization problems. The NN surrogate model consists of a fixed number of parameters, which can be as few as $\approx 1.3 \times 10^{4}$, that are updated as NNAIF progresses. We show that NNAIF directly inherits the convergence properties of IF optimization methods, and thus NNAIF is guaranteed to converge towards a critical point of the objective function under appropriate assumptions. Numerical experiments with $31$ noisy problems from the CUTEst optimization benchmark set demonstrate the benefits and costs associated with NNAIF. These benefits include NNAIF’s ability to minimize structured functions of several thousand variables much more rapidly than well-known alternatives, such as Covariance Matrix Adaptation Evolution Strategy (CMA-ES) and finite difference based variants of gradient descent (GD) and BFGS, as well as its namesake IF.}
 }
 ```
-
 
